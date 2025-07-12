@@ -1,11 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { mongoDb } = require('./db');
-const calculationSchema = require('./models/Calculation');
-
-const Calculation = mongoDb.model('Calculation', calculationSchema);
 
 const router = express.Router();
+
+// Define the Calculation Schema
+const CalculationSchema = new mongoose.Schema({
+  expression: { type: String, required: true },
+  result: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
+
+const Calculation = mongoose.model('Calculation', CalculationSchema);
 
 // GET /api/hello
 router.get('/hello', (req, res) => {
@@ -24,9 +29,8 @@ router.get('/status', (req, res) => {
 router.post('/calculations', async (req, res) => {
   try {
     const { expression, result } = req.body;
-    
-    if (!expression || result === undefined) {
-      return res.status(400).json({ error: 'Expression and result are required' });
+    if (!expression || !result) {
+      return res.status(400).json({ message: 'Expression and result are required' });
     }
 
     const newCalculation = new Calculation({
@@ -38,21 +42,18 @@ router.post('/calculations', async (req, res) => {
     res.status(201).json(savedCalculation);
   } catch (error) {
     console.error('Error saving calculation:', error);
-    res.status(500).json({ error: 'Failed to save calculation' });
+    res.status(500).json({ message: 'Failed to save calculation' });
   }
 });
 
 // GET /api/calculations - Retrieve calculation history
 router.get('/calculations', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
-    const calculations = await Calculation.find()
-      .sort({ createdAt: -1 })
-      .limit(limit);
+    const calculations = await Calculation.find().sort({ timestamp: -1 }).limit(10);
     res.json(calculations);
   } catch (error) {
-    console.error('Error retrieving calculations:', error);
-    res.status(500).json({ error: 'Failed to retrieve calculations' });
+    console.error('Error fetching calculations:', error);
+    res.status(500).json({ message: 'Failed to fetch calculation history' });
   }
 });
 

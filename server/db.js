@@ -1,21 +1,21 @@
 const mongoose = require('mongoose');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/calculator_db';
+const MONGO_URI = process.env.MONGO_URI;
 
-const mongoDb = mongoose.createConnection(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
-
-mongoDb
-  .asPromise()
-  .then(() => {
-    console.log('MongoDB connected successfully');
-  })
-  .catch((err) => {
+const connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB connected');
+  } catch (err) {
     console.error('MongoDB connection error:', err);
-  });
+    throw err;
+  }
+};
 
 module.exports = {
-  mongoDb,
+  connectToMongoDB,
+  mongoose,
 };
